@@ -1,0 +1,80 @@
+version: '3.5'
+
+services:
+  laravel-app:
+    build:
+      context: '.'
+      args:
+        uid: 1000
+    container_name: laravel-app
+    ports:
+      - 8000:80
+    environment:
+      - APACHE_RUN_USER=#1000
+      - APACHE_RUN_GROUP=#1000
+    volumes:
+      - .:/var/www/html
+    networks:
+      back:
+        ipv4_address: 172.16.238.2
+        ipv6_address: 2001:3984:3989::2
+      default:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+    volumes:
+     - ./db:/var/lib/postgresql/data/
+
+    ports:
+      - 5432:5432
+    
+    networks:
+      back:
+        ipv4_address: 172.16.238.3
+        ipv6_address: 2001:3984:3989::3
+      default:
+
+  # adminer:
+  #   image: adminer
+  #   restart: always
+
+  #   ports:
+  #     - 6080:8080
+    
+  #   networks:
+  #     back:
+  #       ipv4_address: 172.16.238.4
+  #       ipv6_address: 2001:3984:3989::4
+  #     default:
+
+  # mysql-db:
+  #   image: mysql:5.7
+  #   container_name: mysql-db
+  #   volumes:
+  #     - ./run/var:/var/lib/mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=securerootpassword
+  #     - MYSQL_DATABASE=${DB_DATABASE}
+  #     - MYSQL_USER=${DB_USERNAME}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD}
+  #   networks:
+  #     backend:
+  #       aliases:
+  #         - mysql-db
+
+networks:
+#Internal-only network for proper nginx proxying and ssh
+  back:
+    driver: bridge
+    enable_ipv6: true
+    internal: true
+    ipam:
+     driver: default
+     config:
+       - subnet: 172.16.238.0/24
+       - subnet: 2001:3984:3989::/64 
+#External network actually
+  default:
+    driver: bridge

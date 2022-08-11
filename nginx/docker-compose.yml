@@ -1,0 +1,76 @@
+version: '3'
+
+networks:
+  laravel:
+
+
+services:
+  # web:
+  #   # build: ./web
+  #   image: php
+  #   environment:
+  #     - APACHE_RUN_USER=www-data
+  #   volumes:
+  #     - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+  #   ports:
+  #     - 8080:80
+  #   working_dir: ${APP_PATH_CONTAINER}
+  #   command: docker-php-ext-install pdo pdo_pgsql pgsql
+
+  ngnix:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "8088:80"
+    volumes:
+      # - ./nginx:/etc/nginx/templates
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - laravel
+    # command: [nginx-debug, '-g', 'daemon off;']
+    
+
+  php:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    ports:
+      - "9000:9000"
+    networks:
+      - laravel
+
+  db:
+    image: postgres
+    restart: always
+    # networks:
+    #   - laravel
+    environment:
+      POSTGRES_PASSWORD: admin
+    volumes:
+     - ${DB_PATH_HOST}:/var/lib/postgresql/data/
+
+    ports:
+      - 5432:5432
+   
+
+
+
+  # adminer:
+  #   image: adminer
+  #   restart: always
+
+  #   ports:
+  #     - 6080:8080
+
+
+  # composer:
+  #   image: composer:latest
+  #   volumes:
+  #     - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+  #   working_dir: ${APP_PATH_CONTAINER}
+  #   command: composer install
